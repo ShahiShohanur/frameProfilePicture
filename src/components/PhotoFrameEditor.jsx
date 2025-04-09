@@ -1,12 +1,9 @@
-"use client"
+'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Group, Image as KonvaImage, Layer, Stage, Transformer } from 'react-konva';
 import useImage from 'use-image';
 
-const frameList = [
-  '/fb-frame-final.png',
-  // '/Frame-PNG-Photo.png',
-];
+const frameList = ['/fb-frame-final.png'];
 
 export default function PhotoFrameEditor() {
   const [userImage, setUserImage] = useState(null);
@@ -14,10 +11,14 @@ export default function PhotoFrameEditor() {
   const [frameIndex, setFrameIndex] = useState(0);
   const [frameImage] = useImage(frameList[frameIndex]);
 
+  const [canvasSize, setCanvasSize] = useState(300); // Default mobile size
+  const [isMobile, setIsMobile] = useState(true);
+
   const stageRef = useRef();
   const userImageRef = useRef();
   const trRef = useRef();
   const layerRef = useRef();
+  const containerRef = useRef();
 
   const handleUpload = (e) => {
     const file = e.target.files[0];
@@ -34,6 +35,34 @@ export default function PhotoFrameEditor() {
     };
     reader.readAsDataURL(file);
   };
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    const resizeCanvas = () => {
+      if (containerRef.current) {
+        checkIfMobile();
+        const containerWidth = containerRef.current.offsetWidth;
+        // On mobile, take full width minus padding, on desktop limit to 512px
+        const size = isMobile
+          ? containerWidth - 32 // accounting for padding
+          : Math.min(containerWidth, 512);
+        setCanvasSize(size);
+      }
+    };
+
+    // Initial setup
+    checkIfMobile();
+    resizeCanvas();
+
+    // Add event listeners
+    window.addEventListener('resize', resizeCanvas);
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+    };
+  }, [isMobile]);
 
   useEffect(() => {
     if (userImgObj && userImageRef.current) {
@@ -58,14 +87,23 @@ export default function PhotoFrameEditor() {
     }
   };
 
-  const handleFrameChange = (index) => {
-    setFrameIndex(index);
-  };
+  const scale = canvasSize / 512;
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <label htmlFor="file-upload" className="bg-blue-600 text-white p-3 rounded-md cursor-pointer hover:bg-blue-700 transition duration-200">
-        {userImage ? "Change Image" : "Upload Image"}
+    <div
+      ref={containerRef}
+      className="w-full max-w-md mx-auto p-4 flex flex-col items-center gap-4"
+      style={{
+        width: '100%',
+        maxWidth: '100vw',
+        boxSizing: 'border-box'
+      }}
+    >
+      <label
+        htmlFor="file-upload"
+        className="bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-700 transition duration-200 text-sm sm:text-base w-full sm:w-auto text-center"
+      >
+        {userImage ? 'Change Image' : 'Upload Image'}
         <input
           id="file-upload"
           type="file"
@@ -75,59 +113,83 @@ export default function PhotoFrameEditor() {
         />
       </label>
 
-      <Stage
-        width={512}
-        height={512}
-        ref={stageRef}
-        className="border border-gray-300"
-        style={{ borderRadius: '50%', overflow: 'hidden' }}
+      <div
+        className="relative"
+        style={{
+          width: canvasSize,
+          height: canvasSize,
+          borderRadius: '50%',
+          overflow: 'hidden',
+          border: '1px solid #ccc',
+          maxWidth: '100%',
+          aspectRatio: '1/1'
+        }}
       >
-        <Layer ref={layerRef}>
-          <Group
-            clipFunc={(ctx) => {
-              ctx.beginPath();
-              ctx.arc(256, 256, 256, 0, Math.PI * 2, false);
-              ctx.closePath();
-            }}
-          >
-            {userImage && (
-              <>
-                <KonvaImage
-                  image={userImgObj}
-                  x={56}
-                  y={56}
-                  width={400}
-                  height={400}
-                  draggable
-                  ref={userImageRef}
-                />
-                <Transformer
-                  ref={trRef}
-                  rotateEnabled={true}
-                  enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
-                  boundBoxFunc={(oldBox, newBox) => {
-                    if (newBox.width < 50 || newBox.height < 50) {
-                      return oldBox;
-                    }
-                    return newBox;
-                  }}
-                />
-              </>
+        <Stage
+          width={canvasSize}
+          height={canvasSize}
+          ref={stageRef}
+          className="block"
+        >
+          <Layer ref={layerRef}>
+            <Group
+              clipFunc={(ctx) => {
+                ctx.beginPath();
+                ctx.arc(canvasSize / 2, canvasSize / 2, canvasSize / 2, 0, Math.PI * 2, false);
+                ctx.closePath();
+              }}
+            >
+              {userImage && (
+                <>
+                  <KonvaImage
+                    image={userImgObj}
+                    x={56 * scale}
+                    y={56 * scale}
+                    width={400 * scale}
+                    height={400 * scale}
+                    draggable
+                    ref={userImageRef}
+                  />
+                  <Transformer
+                    ref={trRef}
+                    rotateEnabled={true}
+                    enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
+                    boundBoxFunc={(oldBox, newBox) => {
+                      if (newBox.width < 50 * scale || newBox.height < 50 * scale) {
+                        return oldBox;
+                      }
+                      return newBox;
+                    }}
+                    borderStrokeWidth={1 * scale}
+                    anchorStrokeWidth={1 * scale}
+                    anchorSize={8 * scale}
+                  />
+                </>
+              )}
+            </Group>
+
+            {frameImage && (
+              <KonvaImage
+                image={frameImage}
+                x={0}
+                y={0}
+                width={canvasSize}
+                height={canvasSize}
+                listening={false}
+              />
             )}
-          </Group>
+          </Layer>
+        </Stage>
+      </div>
 
-          {frameImage && (
-            <KonvaImage image={frameImage} x={0} y={0} width={512} height={512} listening={false} />
-          )}
-        </Layer>
-      </Stage>
-
-      <button
-        onClick={handleDownload}
-        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200"
-      >
-        Save
-      </button>
+      {userImage && (
+        <button
+          onClick={handleDownload}
+          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 text-sm sm:text-base w-full sm:w-auto"
+        >
+          Save Image
+        </button>
+      )}
     </div>
   );
 }
