@@ -14,6 +14,7 @@ export default function PhotoFrameEditor() {
   const [canvasSize, setCanvasSize] = useState(300); // Default mobile size
   const [isMobile, setIsMobile] = useState(true);
   const [scaleFactor, setScaleFactor] = useState(1); // Scale factor for the image
+  const [aspectRatio, setAspectRatio] = useState(1); // Store the image's aspect ratio
 
   const stageRef = useRef();
   const userImageRef = useRef();
@@ -32,6 +33,7 @@ export default function PhotoFrameEditor() {
       img.onload = () => {
         setUserImage(img.src);
         setUserImgObj(img);
+        setAspectRatio(img.width / img.height); // Set the aspect ratio
       };
     };
     reader.readAsDataURL(file);
@@ -95,6 +97,10 @@ export default function PhotoFrameEditor() {
     setScaleFactor(e.target.value);
   };
 
+  // Calculate the image width and height based on the scale factor and aspect ratio
+  const imageWidth = 400 * scaleFactor * scale * aspectRatio;
+  const imageHeight = 400 * scaleFactor * scale;
+
   return (
     <div
       ref={containerRef}
@@ -149,10 +155,10 @@ export default function PhotoFrameEditor() {
                 <>
                   <KonvaImage
                     image={userImgObj}
-                    x={56 * scale}
-                    y={56 * scale}
-                    width={400 * scaleFactor * scale} // Apply scale factor to width
-                    height={400 * scaleFactor * scale} // Apply scale factor to height
+                    x={(canvasSize - imageWidth) / 2} // Center the image horizontally
+                    y={(canvasSize - imageHeight) / 2} // Center the image vertically
+                    width={imageWidth} // Use the calculated width
+                    height={imageHeight} // Use the calculated height
                     draggable
                     ref={userImageRef}
                   />
