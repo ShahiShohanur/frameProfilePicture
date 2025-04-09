@@ -13,6 +13,7 @@ export default function PhotoFrameEditor() {
 
   const [canvasSize, setCanvasSize] = useState(300); // Default mobile size
   const [isMobile, setIsMobile] = useState(true);
+  const [scaleFactor, setScaleFactor] = useState(1); // Scale factor for the image
 
   const stageRef = useRef();
   const userImageRef = useRef();
@@ -89,6 +90,11 @@ export default function PhotoFrameEditor() {
 
   const scale = canvasSize / 512;
 
+  // Handle scaling from the slider
+  const handleScaleChange = (e) => {
+    setScaleFactor(e.target.value);
+  };
+
   return (
     <div
       ref={containerRef}
@@ -145,8 +151,8 @@ export default function PhotoFrameEditor() {
                     image={userImgObj}
                     x={56 * scale}
                     y={56 * scale}
-                    width={400 * scale}
-                    height={400 * scale}
+                    width={400 * scaleFactor * scale} // Apply scale factor to width
+                    height={400 * scaleFactor * scale} // Apply scale factor to height
                     draggable
                     ref={userImageRef}
                   />
@@ -181,6 +187,23 @@ export default function PhotoFrameEditor() {
           </Layer>
         </Stage>
       </div>
+
+      {userImage && (
+        <div className="w-full mt-4">
+          <label htmlFor="image-scale" className="text-sm font-medium">Adjust Image Size:</label>
+          <input
+            id="image-scale"
+            type="range"
+            min="0.5"
+            max="2"
+            step="0.01"
+            value={scaleFactor}
+            onChange={handleScaleChange}
+            className="w-full mt-2"
+          />
+          <div className="text-sm text-center">Scale: {Math.round(scaleFactor * 100)}%</div>
+        </div>
+      )}
 
       {userImage && (
         <button
