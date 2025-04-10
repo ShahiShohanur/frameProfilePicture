@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Group, Image as KonvaImage, Layer, Stage, Transformer } from 'react-konva';
 import useImage from 'use-image';
 
-const frameList = ['/fb-frame-final.png'];
+const frameList = ['/fb-frame-final-max-1200.png'];
 
 export default function PhotoFrameEditor() {
   const [userImage, setUserImage] = useState(null);
@@ -98,35 +98,27 @@ export default function PhotoFrameEditor() {
   };
 
   // Calculate the image width and height based on the scale factor and aspect ratio
-  const imageWidth = 400 * scaleFactor * scale * aspectRatio;
-  const imageHeight = 400 * scaleFactor * scale;
+  const imageWidth = 670 * scaleFactor * scale * aspectRatio; // previous value 400
+  const imageHeight = 670 * scaleFactor * scale; // previous value 400
 
   return (
     <div
       ref={containerRef}
-      className="w-full max-w-md mx-auto p-4 flex flex-col items-center gap-4"
+      className='w-full max-w-md mx-auto p-4 flex flex-col items-center gap-4'
       style={{
         width: '100%',
         maxWidth: '100vw',
-        boxSizing: 'border-box'
-      }}
-    >
+        boxSizing: 'border-box',
+      }}>
       <label
-        htmlFor="file-upload"
-        className="bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-700 transition duration-200 text-sm sm:text-base w-full sm:w-auto text-center"
-      >
+        htmlFor='file-upload'
+        className='bg-blue-600 text-white px-4 py-2 rounded-md cursor-pointer hover:bg-blue-700 transition duration-200 text-sm sm:text-base w-full sm:w-auto text-center'>
         {userImage ? 'Change Image' : 'Upload Image'}
-        <input
-          id="file-upload"
-          type="file"
-          accept="image/*"
-          onChange={handleUpload}
-          className="hidden"
-        />
+        <input id='file-upload' type='file' accept='image/*' onChange={handleUpload} className='hidden' />
       </label>
 
       <div
-        className="relative"
+        className='relative'
         style={{
           width: canvasSize,
           height: canvasSize,
@@ -134,23 +126,16 @@ export default function PhotoFrameEditor() {
           overflow: 'hidden',
           border: '1px solid #ccc',
           maxWidth: '100%',
-          aspectRatio: '1/1'
-        }}
-      >
-        <Stage
-          width={canvasSize}
-          height={canvasSize}
-          ref={stageRef}
-          className="block"
-        >
+          aspectRatio: '1/1',
+        }}>
+        <Stage width={canvasSize} height={canvasSize} ref={stageRef} className='block'>
           <Layer ref={layerRef}>
             <Group
               clipFunc={(ctx) => {
                 ctx.beginPath();
                 ctx.arc(canvasSize / 2, canvasSize / 2, canvasSize / 2, 0, Math.PI * 2, false);
                 ctx.closePath();
-              }}
-            >
+              }}>
               {userImage && (
                 <>
                   <KonvaImage
@@ -181,41 +166,35 @@ export default function PhotoFrameEditor() {
             </Group>
 
             {frameImage && (
-              <KonvaImage
-                image={frameImage}
-                x={0}
-                y={0}
-                width={canvasSize}
-                height={canvasSize}
-                listening={false}
-              />
+              <KonvaImage image={frameImage} x={0} y={0} width={canvasSize} height={canvasSize} listening={false} />
             )}
           </Layer>
         </Stage>
       </div>
 
       {userImage && (
-        <div className="w-full mt-4">
-          <label htmlFor="image-scale" className="text-sm font-medium">Adjust Image Size:</label>
+        <div className='w-full mt-4'>
+          <label htmlFor='image-scale' className='text-sm font-medium'>
+            Adjust Image Size:
+          </label>
           <input
-            id="image-scale"
-            type="range"
-            min="0.5"
-            max="2"
-            step="0.01"
+            id='image-scale'
+            type='range'
+            min='0.5'
+            max='2'
+            step='0.01'
             value={scaleFactor}
             onChange={handleScaleChange}
-            className="w-full mt-2"
+            className='w-full mt-2'
           />
-          <div className="text-sm text-center">Scale: {Math.round(scaleFactor * 100)}%</div>
+          <div className='text-sm text-center'>Scale: {Math.round(scaleFactor * 100)}%</div>
         </div>
       )}
 
       {userImage && (
         <button
           onClick={handleDownload}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 text-sm sm:text-base w-full sm:w-auto"
-        >
+          className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200 text-sm sm:text-base w-full sm:w-auto'>
           Save Image
         </button>
       )}
